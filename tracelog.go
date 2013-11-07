@@ -7,8 +7,8 @@
 	Based on the Go log standard library. It provides 4 destinations with logging levels plus you can attach a file for persistent
 	writes. A log clean process is provided to maintain disk space. There is also email support to send email alerts.
 
-	Read the following blog post for more information:
-	http://www.goinggo.net/2013/11/using-log-package-in-go.html
+		Read the following blog post for more information:
+		http://www.goinggo.net/2013/11/using-log-package-in-go.html
 
 	Example Code:
 
