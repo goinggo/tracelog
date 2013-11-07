@@ -3,13 +3,57 @@
 // license that can be found in the LICENSE handle.
 
 /*
-	Package TraceLog implements a logging system to trace all aspect of your code.
-	The programmer should feel free to trace log as much of the code as possbile. This is our eyes to the running application.
-	Logging System Based On The Log/Logger Standard Library
+	Package TraceLog implements a logging system to trace all aspect of your code. This is great for task oriented programs.
+	Based on the Go log standard library. It provides 4 destinations with logging levels plus you can attach a file for persistent
+	writes. A log clean process is provided to maintain disk space. There is also email support to send email alerts.
 
-	Startup Options
+	Example Code:
 
-	There are two options for starting the TraceLog:
+		package main
+
+		import (
+		    "fmt"
+		    "github.com/goinggo/tracelog"
+		)
+
+		func main() {
+		    //tracelog.StartFile(tracelog.LEVEL_TRACE, "/Users/bill/Temp/logs", 1)
+		    tracelog.Start(tracelog.LEVEL_TRACE)
+
+		    tracelog.TRACE("main", "main", "Hello Trace")
+		    tracelog.INFO("main", "main", "Hello Info")
+		    tracelog.WARN("main", "main", "Hello Warn")
+		    tracelog.ERRORf(fmt.Errorf("Exception At..."), "main", "main", "Hello Error")
+
+		    Example()
+
+		    tracelog.Stop()
+		}
+
+		func Example() {
+		    tracelog.STARTED("main", "Example")
+
+		    err := foo()
+		    if err != nil {
+		        tracelog.COMPLETED_ERROR(err, "main", "Example")
+		        return
+		    }
+
+		    tracelog.COMPLETED("main", "Example")
+		}
+
+	Output:
+
+		TRACE: 2013/11/07 08:24:32 main.go:12: main : main : Info : Hello Trace
+		INFO: 2013/11/07 08:24:32 main.go:13: main : main : Info : Hello Info
+		WARNING: 2013/11/07 08:24:32 main.go:14: main : main : Info : Hello Warn
+		ERROR: 2013/11/07 08:24:32 main.go:15: main : main : Info : Hello Error : Exception At...
+
+		TRACE: 2013/11/07 08:24:32 main.go:23: main : Example : Started
+		TRACE: 2013/11/07 08:24:32 main.go:31: main : Example : Completed
+
+		TRACE: 2013/11/07 08:24:32 tracelog.go:149: main : Stop : Started
+		TRACE: 2013/11/07 08:24:32 tracelog.go:156: main : Stop : Completed
 */
 package tracelog
 
@@ -37,10 +81,10 @@ const (
 )
 
 const (
-	LEVEL_TRACE = 1
-	LEVEL_INFO  = 2
-	LEVEL_WARN  = 4
-	LEVEL_ERROR = 8
+	LEVEL_TRACE = 1 // Log everything
+	LEVEL_INFO  = 2 // Log Info, Warnings and Errors
+	LEVEL_WARN  = 4 // Log Warning and Errors
+	LEVEL_ERROR = 8 // Log just Errors
 )
 
 //** NEW TYPES
@@ -80,28 +124,13 @@ func init() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 }
 
-// ConfigureEmail configures the email system for use
-func ConfigureEmail(host string, port int, userName string, password string, to []string) {
-	emailConfiguration := &emailConfiguration{
-		Host:     host,
-		Port:     port,
-		UserName: userName,
-		Password: password,
-		To:       to,
-		Auth:     smtp.PlainAuth("", userName, password, host),
-		Template: template.Must(template.New("emailTemplate").Parse(_This.EmailScript())),
-	}
-
-	_This.EmailConfiguration = emailConfiguration
-}
-
-// Start initializes tracelog for all logging levels
+// Start initializes tracelog and only displays the specified logging level
 func Start(logLevel int) {
-
 	turnOnLogging(logLevel, nil)
 }
 
-// Start initializes tracelog for all logging levels plus file
+// StartFile initializes tracelog and only displays the specified logging level
+// and creates a file to capture writes
 func StartFile(logLevel int, baseFilePath string, daysToKeep int) {
 	baseFilePath = strings.TrimRight(baseFilePath, "/")
 	currentDate := time.Now().UTC()
@@ -140,6 +169,21 @@ func Stop() (err error) {
 	COMPLETED("main", "Stop")
 
 	return err
+}
+
+// ConfigureEmail configures the email system for use
+func ConfigureEmail(host string, port int, userName string, password string, to []string) {
+	emailConfiguration := &emailConfiguration{
+		Host:     host,
+		Port:     port,
+		UserName: userName,
+		Password: password,
+		To:       to,
+		Auth:     smtp.PlainAuth("", userName, password, host),
+		Template: template.Must(template.New("emailTemplate").Parse(_This.EmailScript())),
+	}
+
+	_This.EmailConfiguration = emailConfiguration
 }
 
 // SendEmailException will send an email along with the exception
