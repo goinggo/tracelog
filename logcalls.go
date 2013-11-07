@@ -107,3 +107,14 @@ func ALERT(subject string, routineName string, functionName string, format strin
 
 	SendEmailException(subject, message)
 }
+
+// COMPLETED_ALERT write to the ERROR destination, writes a Completed tag to the log line and sends email alert
+func COMPLETED_ALERT(subject string, routineName string, functionName string, format string, a ...interface{}) {
+	message := fmt.Sprintf("%s : %s : Completed : %s\n", routineName, functionName, fmt.Sprintf(format, a...))
+
+	_This.Serialize.Lock()
+	defer _This.Serialize.Unlock()
+	_This.ERROR.Output(2, message)
+
+	SendEmailException(subject, message)
+}
