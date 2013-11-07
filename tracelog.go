@@ -193,6 +193,10 @@ func ConfigureEmail(host string, port int, userName string, password string, to 
 func SendEmailException(subject string, message string, a ...interface{}) (err error) {
 	defer _This.CatchPanic(&err, "SendEmailException")
 
+	if _This.EmailConfiguration == nil {
+		return
+	}
+
 	parameters := &struct {
 		From    string
 		To      string

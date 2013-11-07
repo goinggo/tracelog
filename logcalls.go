@@ -94,3 +94,16 @@ func ERRORf(err error, routineName string, functionName string, format string, a
 	defer _This.Serialize.Unlock()
 	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : Info : %s : %s\n", routineName, functionName, fmt.Sprintf(format, a...), err))
 }
+
+//** ALERT
+
+// ALERT write to the ERROR destination and sends email alert
+func ALERT(subject string, routineName string, functionName string, format string, a ...interface{}) {
+	message := fmt.Sprintf("%s : %s : Info : %s\n", routineName, functionName, fmt.Sprintf(format, a...))
+
+	_This.Serialize.Lock()
+	defer _This.Serialize.Unlock()
+	_This.ERROR.Output(2, message)
+
+	SendEmailException(subject, message)
+}
