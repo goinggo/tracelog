@@ -42,7 +42,7 @@ func COMPLETEDf(routineName string, functionName string, format string, a ...int
 func COMPLETED_ERROR(err error, routineName string, functionName string) {
 	_This.Serialize.Lock()
 	defer _This.Serialize.Unlock()
-	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : Completed : %s\n", err))
+	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : Completed : %s\n", routineName, functionName, err))
 }
 
 // COMPLETED_ERRORf uses the ERROR destination and writes a Completed tag to the log line
@@ -85,7 +85,7 @@ func WARN(routineName string, functionName string, format string, a ...interface
 func ERROR(err error, routineName string, functionName string) {
 	_This.Serialize.Lock()
 	defer _This.Serialize.Unlock()
-	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : Info : %s\n", err))
+	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : Info : %s\n", routineName, functionName, err))
 }
 
 // ERROR writes to the ERROR destination and accepts an err
