@@ -78,7 +78,6 @@ import (
 
 //** CONSTANTS
 
-// Support constants
 const (
 	_SYSTEM_ALERT_SUBJECT = "TraceLog Exception"
 )
@@ -90,42 +89,48 @@ const (
 	LEVEL_ERROR = 8 // Log just Errors
 )
 
-//** NEW TYPES
+//** PACKAGE VARIABLES
 
-// emailConfiguration contains configuration information required by the ConfigureEmailAlerts function
-type emailConfiguration struct {
-	Host     string
-	Port     int
-	UserName string
-	Password string
-	To       []string
-	Auth     smtp.Auth
-	Template *template.Template
-}
+var (
+	_This *traceLog // A reference to the singleton
+)
 
-// traceLog provides support to write to log files
-type traceLog struct {
-	Serialize          sync.Mutex
-	EmailConfiguration *emailConfiguration
-	TRACE              *log.Logger
-	INFO               *log.Logger
-	WARN               *log.Logger
-	ERROR              *log.Logger
-	FILE               *log.Logger
-	LogFile            *os.File
-}
+//** TYPES
 
-//** SINGLETON REFERENCE
+type (
+	// emailConfiguration contains configuration information required by the ConfigureEmailAlerts function
+	emailConfiguration struct {
+		Host     string
+		Port     int
+		UserName string
+		Password string
+		To       []string
+		Auth     smtp.Auth
+		Template *template.Template
+	}
 
-var _This *traceLog // A reference to the singleton
+	// traceLog provides support to write to log files
+	traceLog struct {
+		Serialize          sync.Mutex
+		EmailConfiguration *emailConfiguration
+		TRACE              *log.Logger
+		INFO               *log.Logger
+		WARN               *log.Logger
+		ERROR              *log.Logger
+		FILE               *log.Logger
+		LogFile            *os.File
+	}
+)
 
-//** PUBLIC FUNCTIONS
+//** INIT FUNCTION
 
 // Called to init the logging system
 func init() {
 	log.SetPrefix("TRACE: ")
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 }
+
+//** PUBLIC FUNCTIONS
 
 // Start initializes tracelog and only displays the specified logging level
 func Start(logLevel int) {
