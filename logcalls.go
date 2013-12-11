@@ -42,14 +42,14 @@ func COMPLETEDf(routineName string, functionName string, format string, a ...int
 func COMPLETED_ERROR(err error, routineName string, functionName string) {
 	_This.Serialize.Lock()
 	defer _This.Serialize.Unlock()
-	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : Completed : %s\n", routineName, functionName, err))
+	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : Completed : ERROR : %s\n", routineName, functionName, err))
 }
 
 // COMPLETED_ERRORf uses the ERROR destination and writes a Completed tag to the log line
 func COMPLETED_ERRORf(err error, routineName string, functionName string, format string, a ...interface{}) {
 	_This.Serialize.Lock()
 	defer _This.Serialize.Unlock()
-	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : Completed : %s : %s\n", routineName, functionName, fmt.Sprintf(format, a...), err))
+	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : Completed : ERROR : %s : %s\n", routineName, functionName, fmt.Sprintf(format, a...), err))
 }
 
 //** TRACE
@@ -85,21 +85,21 @@ func WARN(routineName string, functionName string, format string, a ...interface
 func ERROR(err error, routineName string, functionName string) {
 	_This.Serialize.Lock()
 	defer _This.Serialize.Unlock()
-	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : Info : %s\n", routineName, functionName, err))
+	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : ERROR : %s\n", routineName, functionName, err))
 }
 
 // ERROR writes to the ERROR destination and accepts an err
 func ERRORf(err error, routineName string, functionName string, format string, a ...interface{}) {
 	_This.Serialize.Lock()
 	defer _This.Serialize.Unlock()
-	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : Info : %s : %s\n", routineName, functionName, fmt.Sprintf(format, a...), err))
+	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : ERROR : %s : %s\n", routineName, functionName, fmt.Sprintf(format, a...), err))
 }
 
 //** ALERT
 
 // ALERT write to the ERROR destination and sends email alert
 func ALERT(subject string, routineName string, functionName string, format string, a ...interface{}) {
-	message := fmt.Sprintf("%s : %s : Info : %s\n", routineName, functionName, fmt.Sprintf(format, a...))
+	message := fmt.Sprintf("%s : %s : ALERT : %s\n", routineName, functionName, fmt.Sprintf(format, a...))
 
 	_This.Serialize.Lock()
 	defer _This.Serialize.Unlock()
@@ -110,7 +110,7 @@ func ALERT(subject string, routineName string, functionName string, format strin
 
 // COMPLETED_ALERT write to the ERROR destination, writes a Completed tag to the log line and sends email alert
 func COMPLETED_ALERT(subject string, routineName string, functionName string, format string, a ...interface{}) {
-	message := fmt.Sprintf("%s : %s : Completed : %s\n", routineName, functionName, fmt.Sprintf(format, a...))
+	message := fmt.Sprintf("%s : %s : Completed : ALERT : %s\n", routineName, functionName, fmt.Sprintf(format, a...))
 
 	_This.Serialize.Lock()
 	defer _This.Serialize.Unlock()
