@@ -8,7 +8,7 @@ import (
 	"fmt"
 )
 
-//** Started and Completed
+//** STARTED AND COMPLETED
 
 // STARTED uses the TRACE destination and adds a Started tag to the log line
 func STARTED(routineName string, functionName string) {
@@ -88,7 +88,7 @@ func ERROR(err error, routineName string, functionName string) {
 	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : ERROR : %s\n", routineName, functionName, err))
 }
 
-// ERROR writes to the ERROR destination and accepts an err
+// ERRORf writes to the ERROR destination and accepts an err
 func ERRORf(err error, routineName string, functionName string, format string, a ...interface{}) {
 	_This.Serialize.Lock()
 	defer _This.Serialize.Unlock()
