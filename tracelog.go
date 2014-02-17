@@ -72,6 +72,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"text/template"
 	"time"
 )
@@ -83,10 +84,10 @@ const (
 )
 
 const (
-	LEVEL_TRACE = 1 // Log everything
-	LEVEL_INFO  = 2 // Log Info, Warnings and Errors
-	LEVEL_WARN  = 4 // Log Warning and Errors
-	LEVEL_ERROR = 8 // Log just Errors
+	LEVEL_TRACE int32 = 1 // Log everything
+	LEVEL_INFO  int32 = 2 // Log Info, Warnings and Errors
+	LEVEL_WARN  int32 = 4 // Log Warning and Errors
+	LEVEL_ERROR int32 = 8 // Log just Errors
 )
 
 //** PACKAGE VARIABLES
@@ -111,6 +112,7 @@ type (
 
 	// traceLog provides support to write to log files
 	traceLog struct {
+		LogLevel           int32
 		Serialize          sync.Mutex
 		EmailConfiguration *emailConfiguration
 		TRACE              *log.Logger
@@ -133,13 +135,13 @@ func init() {
 //** PUBLIC FUNCTIONS
 
 // Start initializes tracelog and only displays the specified logging level
-func Start(logLevel int) {
+func Start(logLevel int32) {
 	turnOnLogging(logLevel, nil)
 }
 
 // StartFile initializes tracelog and only displays the specified logging level
 // and creates a file to capture writes
-func StartFile(logLevel int, baseFilePath string, daysToKeep int) {
+func StartFile(logLevel int32, baseFilePath string, daysToKeep int) {
 	baseFilePath = strings.TrimRight(baseFilePath, "/")
 	currentDate := time.Now().UTC()
 	dateDirectory := time.Now().UTC().Format("2006-01-02")
@@ -222,10 +224,15 @@ func SendEmailException(subject string, message string, a ...interface{}) (err e
 	return err
 }
 
+// LogLevel returns the configured logging level
+func LogLevel() int32 {
+	return atomic.LoadInt32(&_This.LogLevel)
+}
+
 //** PRIVATE FUNCTIONS
 
 // turnOnLogging configures the logging writers
-func turnOnLogging(logLevel int, fileHandle io.Writer) {
+func turnOnLogging(logLevel int32, fileHandle io.Writer) {
 	traceHandle := ioutil.Discard
 	infoHandle := ioutil.Discard
 	warnHandle := ioutil.Discard
@@ -277,6 +284,8 @@ func turnOnLogging(logLevel int, fileHandle io.Writer) {
 		WARN:  log.New(warnHandle, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile),
 		ERROR: log.New(errorHandle, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile),
 	}
+
+	atomic.StoreInt32(&_This.LogLevel, logLevel)
 }
 
 //** PRIVATE MEMBER FUNCTIONS
