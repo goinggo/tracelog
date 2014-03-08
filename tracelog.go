@@ -1,5 +1,5 @@
 // Copyright 2013 Ardan Studios. All rights reserved.
-// Use of this source code is governed by a BSD-style
+// Use of traceLog source code is governed by a BSD-style
 // license that can be found in the LICENSE handle.
 
 /*
@@ -291,8 +291,8 @@ func turnOnLogging(logLevel int32, fileHandle io.Writer) {
 //** PRIVATE MEMBER FUNCTIONS
 
 // LogDirectoryCleanup performs all the directory cleanup and maintenance
-func (this *traceLog) LogDirectoryCleanup(baseFilePath string, daysToKeep int) {
-	defer this.CatchPanic(nil, "LogDirectoryCleanup")
+func (traceLog *traceLog) LogDirectoryCleanup(baseFilePath string, daysToKeep int) {
+	defer traceLog.CatchPanic(nil, "LogDirectoryCleanup")
 
 	STARTEDf("main", "LogDirectoryCleanup", "BaseFilePath[%s] DaysToKeep[%d]", baseFilePath, daysToKeep)
 
@@ -368,7 +368,7 @@ func (this *traceLog) LogDirectoryCleanup(baseFilePath string, daysToKeep int) {
 }
 
 // CatchPanic is used to catch any Panic and log exceptions to Stdout. It will also write the stack trace
-func (this *traceLog) CatchPanic(err *error, functionName string) {
+func (traceLog *traceLog) CatchPanic(err *error, functionName string) {
 	if r := recover(); r != nil {
 
 		// Capture the stack trace
@@ -384,7 +384,7 @@ func (this *traceLog) CatchPanic(err *error, functionName string) {
 }
 
 // EmailScript returns a template for the email message to be sent
-func (this *traceLog) EmailScript() (script string) {
+func (traceLog *traceLog) EmailScript() (script string) {
 	return `From: {{.From}}
 To: {{.To}}
 Subject: {{.Subject}}
