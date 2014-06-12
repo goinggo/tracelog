@@ -1,7 +1,6 @@
 // Copyright 2013 Ardan Studios. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE handle.
-
 package tracelog
 
 import (
@@ -10,111 +9,81 @@ import (
 
 //** STARTED AND COMPLETED
 
-// STARTED uses the TRACE destination and adds a Started tag to the log line
-func STARTED(routineName string, functionName string) {
-	_This.Serialize.Lock()
-	defer _This.Serialize.Unlock()
-	_This.TRACE.Output(2, fmt.Sprintf("%s : %s : Started\n", routineName, functionName))
+// Started uses the Serialize destination and adds a Started tag to the log line
+func Started(title string, functionName string) {
+	logger.Trace.Output(2, fmt.Sprintf("%s : %s : Started\n", title, functionName))
 }
 
-// STARTEDf uses the TRACE destination and writes a Started tag to the log line
-func STARTEDf(routineName string, functionName string, format string, a ...interface{}) {
-	_This.Serialize.Lock()
-	defer _This.Serialize.Unlock()
-	_This.TRACE.Output(2, fmt.Sprintf("%s : %s : Started : %s\n", routineName, functionName, fmt.Sprintf(format, a...)))
+// Startedf uses the Serialize destination and writes a Started tag to the log line
+func Startedf(title string, functionName string, format string, a ...interface{}) {
+	logger.Trace.Output(2, fmt.Sprintf("%s : %s : Started : %s\n", title, functionName, fmt.Sprintf(format, a...)))
 }
 
-// COMPLETED uses the TRACE destination and writes a Completed tag to the log line
-func COMPLETED(routineName string, functionName string) {
-	_This.Serialize.Lock()
-	defer _This.Serialize.Unlock()
-	_This.TRACE.Output(2, fmt.Sprintf("%s : %s : Completed\n", routineName, functionName))
+// Completed uses the Serialize destination and writes a Completed tag to the log line
+func Completed(title string, functionName string) {
+	logger.Trace.Output(2, fmt.Sprintf("%s : %s : Completed\n", title, functionName))
 }
 
-// COMPLETEDf uses the TRACE destination and writes a Completed tag to the log line
-func COMPLETEDf(routineName string, functionName string, format string, a ...interface{}) {
-	_This.Serialize.Lock()
-	defer _This.Serialize.Unlock()
-	_This.TRACE.Output(2, fmt.Sprintf("%s : %s : Completed : %s\n", routineName, functionName, fmt.Sprintf(format, a...)))
+// COMPLETEDf uses the Serialize destination and writes a Completed tag to the log line
+func Completedf(title string, functionName string, format string, a ...interface{}) {
+	logger.Trace.Output(2, fmt.Sprintf("%s : %s : Completed : %s\n", title, functionName, fmt.Sprintf(format, a...)))
 }
 
-// COMPLETED_ERROR uses the ERROR destination and writes a Completed tag to the log line
-func COMPLETED_ERROR(err error, routineName string, functionName string) {
-	_This.Serialize.Lock()
-	defer _This.Serialize.Unlock()
-	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : Completed : ERROR : %s\n", routineName, functionName, err))
+// CompletedError uses the Error destination and writes a Completed tag to the log line
+func CompletedError(err error, title string, functionName string) {
+	logger.Error.Output(2, fmt.Sprintf("%s : %s : Completed : ERROR : %s\n", title, functionName, err))
 }
 
-// COMPLETED_ERRORf uses the ERROR destination and writes a Completed tag to the log line
-func COMPLETED_ERRORf(err error, routineName string, functionName string, format string, a ...interface{}) {
-	_This.Serialize.Lock()
-	defer _This.Serialize.Unlock()
-	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : Completed : ERROR : %s : %s\n", routineName, functionName, fmt.Sprintf(format, a...), err))
+// CompletedErrorf uses the Error destination and writes a Completed tag to the log line
+func CompletedErrorf(err error, title string, functionName string, format string, a ...interface{}) {
+	logger.Error.Output(2, fmt.Sprintf("%s : %s : Completed : ERROR : %s : %s\n", title, functionName, fmt.Sprintf(format, a...), err))
 }
 
 //** TRACE
 
-// TRACE writes to the TRACE destination
-func TRACE(routineName string, functionName string, format string, a ...interface{}) {
-	_This.Serialize.Lock()
-	defer _This.Serialize.Unlock()
-	_This.TRACE.Output(2, fmt.Sprintf("%s : %s : Info : %s\n", routineName, functionName, fmt.Sprintf(format, a...)))
+// Trace writes to the Trace destination
+func Trace(title string, functionName string, format string, a ...interface{}) {
+	logger.Trace.Output(2, fmt.Sprintf("%s : %s : Info : %s\n", title, functionName, fmt.Sprintf(format, a...)))
 }
 
 //** INFO
 
-// INFO writes to the INFO destination
-func INFO(routineName string, functionName string, format string, a ...interface{}) {
-	_This.Serialize.Lock()
-	defer _This.Serialize.Unlock()
-	_This.INFO.Output(2, fmt.Sprintf("%s : %s : Info : %s\n", routineName, functionName, fmt.Sprintf(format, a...)))
+// Info writes to the Info destination
+func Info(title string, functionName string, format string, a ...interface{}) {
+	logger.Info.Output(2, fmt.Sprintf("%s : %s : Info : %s\n", title, functionName, fmt.Sprintf(format, a...)))
 }
 
-//** WARN
+//** WARNING
 
-// WARN writes to the WARN destination
-func WARN(routineName string, functionName string, format string, a ...interface{}) {
-	_This.Serialize.Lock()
-	defer _This.Serialize.Unlock()
-	_This.WARN.Output(2, fmt.Sprintf("%s : %s : Info : %s\n", routineName, functionName, fmt.Sprintf(format, a...)))
+// Warning writes to the Warning destination
+func Warning(title string, functionName string, format string, a ...interface{}) {
+	logger.Warning.Output(2, fmt.Sprintf("%s : %s : Info : %s\n", title, functionName, fmt.Sprintf(format, a...)))
 }
 
 //** ERROR
 
-// ERROR writes to the ERROR destination and accepts an err
-func ERROR(err error, routineName string, functionName string) {
-	_This.Serialize.Lock()
-	defer _This.Serialize.Unlock()
-	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : ERROR : %s\n", routineName, functionName, err))
+// Error writes to the Error destination and accepts an err
+func Error(err error, title string, functionName string) {
+	logger.Error.Output(2, fmt.Sprintf("%s : %s : ERROR : %s\n", title, functionName, err))
 }
 
-// ERRORf writes to the ERROR destination and accepts an err
-func ERRORf(err error, routineName string, functionName string, format string, a ...interface{}) {
-	_This.Serialize.Lock()
-	defer _This.Serialize.Unlock()
-	_This.ERROR.Output(2, fmt.Sprintf("%s : %s : ERROR : %s : %s\n", routineName, functionName, fmt.Sprintf(format, a...), err))
+// Errorf writes to the Error destination and accepts an err
+func Errorf(err error, title string, functionName string, format string, a ...interface{}) {
+	logger.Error.Output(2, fmt.Sprintf("%s : %s : ERROR : %s : %s\n", title, functionName, fmt.Sprintf(format, a...), err))
 }
 
 //** ALERT
 
-// ALERT write to the ERROR destination and sends email alert
-func ALERT(subject string, routineName string, functionName string, format string, a ...interface{}) {
-	message := fmt.Sprintf("%s : %s : ALERT : %s\n", routineName, functionName, fmt.Sprintf(format, a...))
-
-	_This.Serialize.Lock()
-	defer _This.Serialize.Unlock()
-	_This.ERROR.Output(2, message)
-
+// Alert write to the Error destination and sends email alert
+func Alert(subject string, title string, functionName string, format string, a ...interface{}) {
+	message := fmt.Sprintf("%s : %s : ALERT : %s\n", title, functionName, fmt.Sprintf(format, a...))
+	logger.Error.Output(2, message)
 	SendEmailException(subject, message)
 }
 
-// COMPLETED_ALERT write to the ERROR destination, writes a Completed tag to the log line and sends email alert
-func COMPLETED_ALERT(subject string, routineName string, functionName string, format string, a ...interface{}) {
-	message := fmt.Sprintf("%s : %s : Completed : ALERT : %s\n", routineName, functionName, fmt.Sprintf(format, a...))
-
-	_This.Serialize.Lock()
-	defer _This.Serialize.Unlock()
-	_This.ERROR.Output(2, message)
-
+// CompletedAlert write to the Error destination, writes a Completed tag to the log line and sends email alert
+func CompletedAlert(subject string, title string, functionName string, format string, a ...interface{}) {
+	message := fmt.Sprintf("%s : %s : Completed : ALERT : %s\n", title, functionName, fmt.Sprintf(format, a...))
+	logger.Error.Output(2, message)
 	SendEmailException(subject, message)
 }

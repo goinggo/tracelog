@@ -16,7 +16,7 @@
 
 		import (
 		    "fmt"
-		    "github.com/goinggo/tracelog"
+		    "github.com/finapps/tracelog"
 		)
 
 		func main() {
@@ -71,17 +71,12 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"text/template"
 	"time"
 )
 
-//** CONSTANTS
-
-const (
-	_SYSTEM_ALERT_SUBJECT = "TraceLog Exception"
-)
+const systemAlertSubject = "TraceLog Exception"
 
 const (
 	LEVEL_TRACE int32 = 1 // Log everything
@@ -90,57 +85,45 @@ const (
 	LEVEL_ERROR int32 = 8 // Log just Errors
 )
 
-//** PACKAGE VARIABLES
+// emailConfiguration contains configuration information required by the ConfigureEmailAlerts function.
+type emailConfiguration struct {
+	Host     string
+	Port     int
+	UserName string
+	Password string
+	To       []string
+	Auth     smtp.Auth
+	Template *template.Template
+}
 
-var (
-	_This *traceLog // A reference to the singleton
-)
+// traceLog provides support to write to log files.
+type traceLog struct {
+	LogLevel           int32
+	EmailConfiguration *emailConfiguration
+	Trace              *log.Logger
+	Info               *log.Logger
+	Warning            *log.Logger
+	Error              *log.Logger
+	File               *log.Logger
+	LogFile            *os.File
+}
 
-//** TYPES
+// log maintains a pointer to a singleton for the logging system.
+var logger traceLog
 
-type (
-	// emailConfiguration contains configuration information required by the ConfigureEmailAlerts function
-	emailConfiguration struct {
-		Host     string
-		Port     int
-		UserName string
-		Password string
-		To       []string
-		Auth     smtp.Auth
-		Template *template.Template
-	}
-
-	// traceLog provides support to write to log files
-	traceLog struct {
-		LogLevel           int32
-		Serialize          sync.Mutex
-		EmailConfiguration *emailConfiguration
-		TRACE              *log.Logger
-		INFO               *log.Logger
-		WARN               *log.Logger
-		ERROR              *log.Logger
-		FILE               *log.Logger
-		LogFile            *os.File
-	}
-)
-
-//** INIT FUNCTION
-
-// Called to init the logging system
+// Called to init the logging system.
 func init() {
 	log.SetPrefix("TRACE: ")
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 }
 
-//** PUBLIC FUNCTIONS
-
-// Start initializes tracelog and only displays the specified logging level
+// Start initializes tracelog and only displays the specified logging level.
 func Start(logLevel int32) {
 	turnOnLogging(logLevel, nil)
 }
 
 // StartFile initializes tracelog and only displays the specified logging level
-// and creates a file to capture writes
+// and creates a file to capture writes.
 func StartFile(logLevel int32, baseFilePath string, daysToKeep int) {
 	baseFilePath = strings.TrimRight(baseFilePath, "/")
 	currentDate := time.Now().UTC()
@@ -164,74 +147,76 @@ func StartFile(logLevel int32, baseFilePath string, daysToKeep int) {
 	turnOnLogging(logLevel, logf)
 
 	// Cleanup any existing directories
-	_This.LogDirectoryCleanup(baseFilePath, daysToKeep)
+	logger.LogDirectoryCleanup(baseFilePath, daysToKeep)
 }
 
-// Stop will release resources and shutdown all processing
-func Stop() (err error) {
-	STARTED("main", "Stop")
+// Stop will release resources and shutdown all processing.
+func Stop() error {
+	Started("main", "Stop")
 
-	if _This.LogFile != nil {
-		TRACE("main", "Stop", "Closing File")
-		err = _This.LogFile.Close()
+	var err error
+	if logger.LogFile != nil {
+		Trace("main", "Stop", "Closing File")
+		err = logger.LogFile.Close()
 	}
 
-	COMPLETED("main", "Stop")
-
+	Completed("main", "Stop")
 	return err
 }
 
-// ConfigureEmail configures the email system for use
+// ConfigureEmail configures the email system for use.
 func ConfigureEmail(host string, port int, userName string, password string, to []string) {
-	emailConfiguration := &emailConfiguration{
+	logger.EmailConfiguration = &emailConfiguration{
 		Host:     host,
 		Port:     port,
 		UserName: userName,
 		Password: password,
 		To:       to,
 		Auth:     smtp.PlainAuth("", userName, password, host),
-		Template: template.Must(template.New("emailTemplate").Parse(_This.EmailScript())),
+		Template: template.Must(template.New("emailTemplate").Parse(logger.EmailScript())),
 	}
-
-	_This.EmailConfiguration = emailConfiguration
 }
 
-// SendEmailException will send an email along with the exception
-func SendEmailException(subject string, message string, a ...interface{}) (err error) {
-	defer _This.CatchPanic(&err, "SendEmailException")
+// SendEmailException will send an email along with the exception.
+func SendEmailException(subject string, message string, a ...interface{}) error {
+	var err error
+	defer logger.CatchPanic(&err, "SendEmailException")
 
-	if _This.EmailConfiguration == nil {
-		return
+	if logger.EmailConfiguration == nil {
+		return err
 	}
 
-	parameters := &struct {
+	parameters := struct {
 		From    string
 		To      string
 		Subject string
 		Message string
 	}{
-		_This.EmailConfiguration.UserName,
-		strings.Join([]string(_This.EmailConfiguration.To), ","),
+		logger.EmailConfiguration.UserName,
+		strings.Join([]string(logger.EmailConfiguration.To), ","),
 		subject,
 		fmt.Sprintf(message, a...),
 	}
 
-	emailMessage := new(bytes.Buffer)
-	_This.EmailConfiguration.Template.Execute(emailMessage, parameters)
+	var emailMessage bytes.Buffer
+	logger.EmailConfiguration.Template.Execute(&emailMessage, &parameters)
 
-	err = smtp.SendMail(fmt.Sprintf("%s:%d", _This.EmailConfiguration.Host, _This.EmailConfiguration.Port), _This.EmailConfiguration.Auth, _This.EmailConfiguration.UserName, _This.EmailConfiguration.To, emailMessage.Bytes())
+	err = smtp.SendMail(fmt.Sprintf("%s:%d",
+		logger.EmailConfiguration.Host, logger.EmailConfiguration.Port),
+		logger.EmailConfiguration.Auth,
+		logger.EmailConfiguration.UserName,
+		logger.EmailConfiguration.To,
+		emailMessage.Bytes())
 
 	return err
 }
 
-// LogLevel returns the configured logging level
+// LogLevel returns the configured logging level.
 func LogLevel() int32 {
-	return atomic.LoadInt32(&_This.LogLevel)
+	return atomic.LoadInt32(&logger.LogLevel)
 }
 
-//** PRIVATE FUNCTIONS
-
-// turnOnLogging configures the logging writers
+// turnOnLogging configures the logging writers.
 func turnOnLogging(logLevel int32, fileHandle io.Writer) {
 	traceHandle := ioutil.Discard
 	infoHandle := ioutil.Discard
@@ -278,36 +263,34 @@ func turnOnLogging(logLevel int32, fileHandle io.Writer) {
 		}
 	}
 
-	_This = &traceLog{
-		TRACE: log.New(traceHandle, "TRACE: ", log.Ldate|log.Ltime|log.Lshortfile),
-		INFO:  log.New(infoHandle, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile),
-		WARN:  log.New(warnHandle, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile),
-		ERROR: log.New(errorHandle, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile),
+	logger = traceLog{
+		Trace:   log.New(traceHandle, "TRACE: ", log.Ldate|log.Ltime|log.Lshortfile),
+		Info:    log.New(infoHandle, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile),
+		Warning: log.New(warnHandle, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile),
+		Error:   log.New(errorHandle, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile),
 	}
 
-	atomic.StoreInt32(&_This.LogLevel, logLevel)
+	atomic.StoreInt32(&logger.LogLevel, logLevel)
 }
 
-//** PRIVATE MEMBER FUNCTIONS
-
-// LogDirectoryCleanup performs all the directory cleanup and maintenance
+// LogDirectoryCleanup performs all the directory cleanup and maintenance.
 func (traceLog *traceLog) LogDirectoryCleanup(baseFilePath string, daysToKeep int) {
 	defer traceLog.CatchPanic(nil, "LogDirectoryCleanup")
 
-	STARTEDf("main", "LogDirectoryCleanup", "BaseFilePath[%s] DaysToKeep[%d]", baseFilePath, daysToKeep)
+	Startedf("main", "LogDirectoryCleanup", "BaseFilePath[%s] DaysToKeep[%d]", baseFilePath, daysToKeep)
 
-	// Get a list of existing directories
+	// Get a list of existing directories.
 	fileInfos, err := ioutil.ReadDir(baseFilePath)
 	if err != nil {
-		COMPLETED_ERROR(err, "main", "LogDirectoryCleanup")
+		CompletedError(err, "main", "LogDirectoryCleanup")
 		return
 	}
 
-	// Create the date to compare for directories to remove
+	// Create the date to compare for directories to remove.
 	currentDate := time.Now().UTC()
 	compareDate := time.Date(currentDate.Year(), currentDate.Month(), currentDate.Day()-daysToKeep, 0, 0, 0, 0, time.UTC)
 
-	TRACE("main", "LogDirectoryCleanup", "CompareDate[%v]", compareDate)
+	Trace("main", "LogDirectoryCleanup", "CompareDate[%v]", compareDate)
 
 	for _, fileInfo := range fileInfos {
 		if fileInfo.IsDir() == false {
@@ -319,71 +302,68 @@ func (traceLog *traceLog) LogDirectoryCleanup(baseFilePath string, daysToKeep in
 
 		year, err := strconv.Atoi(parts[0])
 		if err != nil {
-			ERRORf(err, "main", "LogDirectoryCleanup", "Attempting To Convert Directory [%s]", fileInfo.Name())
+			Errorf(err, "main", "LogDirectoryCleanup", "Attempting To Convert Directory [%s]", fileInfo.Name())
 			continue
 		}
 
 		month, err := strconv.Atoi(parts[1])
 		if err != nil {
-			ERRORf(err, "main", "LogDirectoryCleanup", "Attempting To Convert Directory [%s]", fileInfo.Name())
+			Errorf(err, "main", "LogDirectoryCleanup", "Attempting To Convert Directory [%s]", fileInfo.Name())
 			continue
 		}
 
 		day, err := strconv.Atoi(parts[2])
 		if err != nil {
-			ERRORf(err, "main", "LogDirectoryCleanup", "Attempting To Convert Directory [%s]", fileInfo.Name())
+			Errorf(err, "main", "LogDirectoryCleanup", "Attempting To Convert Directory [%s]", fileInfo.Name())
 			continue
 		}
 
-		// The directory to check
+		// The directory to check.
 		fullFileName := fmt.Sprintf("%s/%s", baseFilePath, fileInfo.Name())
 
-		// Create a time type from the directory name
+		// Create a time type from the directory name.
 		directoryDate := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
 
-		// Compare the dates and convert to days
+		// Compare the dates and convert to days.
 		daysOld := int(compareDate.Sub(directoryDate).Hours() / 24)
 
-		TRACE("main", "LogDirectoryCleanup", "Checking Directory[%s] DaysOld[%d]", fullFileName, daysOld)
+		Trace("main", "LogDirectoryCleanup", "Checking Directory[%s] DaysOld[%d]", fullFileName, daysOld)
 
 		if daysOld >= 0 {
-			TRACE("main", "LogDirectoryCleanup", "Removing Directory[%s]", fullFileName)
+			Trace("main", "LogDirectoryCleanup", "Removing Directory[%s]", fullFileName)
 
 			err = os.RemoveAll(fullFileName)
-
 			if err != nil {
-				TRACE("main", "LogDirectoryCleanup", "Attempting To Remove Directory [%s]", fullFileName)
+				Trace("main", "LogDirectoryCleanup", "Attempting To Remove Directory [%s]", fullFileName)
 				continue
 			}
 
-			TRACE("main", "LogDirectoryCleanup", "Directory Removed [%s]", fullFileName)
+			Trace("main", "LogDirectoryCleanup", "Directory Removed [%s]", fullFileName)
 		}
 	}
 
-	// We don't need the catch handler to log any errors
+	// We don't need the catch handler to log any errors.
 	err = nil
 
-	COMPLETED("main", "LogDirectoryCleanup")
+	Completed("main", "LogDirectoryCleanup")
 	return
 }
 
-// CatchPanic is used to catch any Panic and log exceptions to Stdout. It will also write the stack trace
+// CatchPanic is used to catch any Panic and log exceptions to Stdout. It will also write the stack logger.
 func (traceLog *traceLog) CatchPanic(err *error, functionName string) {
 	if r := recover(); r != nil {
-
 		// Capture the stack trace
 		buf := make([]byte, 10000)
 		runtime.Stack(buf, false)
 
-		SendEmailException(_SYSTEM_ALERT_SUBJECT, "%s : PANIC Defered [%s] : Stack Trace : %s", functionName, r, string(buf))
-
+		SendEmailException(systemAlertSubject, "%s : PANIC Defered [%s] : Stack Trace : %s", functionName, r, string(buf))
 		if err != nil {
 			*err = fmt.Errorf("%v", r)
 		}
 	}
 }
 
-// EmailScript returns a template for the email message to be sent
+// EmailScript returns a template for the email message to be sent.
 func (traceLog *traceLog) EmailScript() (script string) {
 	return `From: {{.From}}
 To: {{.To}}
