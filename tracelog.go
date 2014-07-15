@@ -3,10 +3,6 @@
 // license that can be found in the LICENSE handle.
 
 /*
-	Package traceLog implements a logging system to trace all aspect of your code. This is great for task oriented programs.
-	Based on the Go log standard library. It provides 4 destinations with logging levels plus you can attach a file for persistent
-	writes. A log clean process is provided to maintain disk space. There is also email support to send email alerts.
-
 		Read the following blog post for more information:
 		http://www.goinggo.net/2013/11/using-log-package-in-go.html
 
@@ -20,8 +16,8 @@
 		)
 
 		func main() {
-		    //tracelog.StartFile(tracelog.LEVEL_TRACE, "/Users/bill/Temp/logs", 1)
-		    tracelog.Start(tracelog.LEVEL_TRACE)
+		    //tracelog.StartFile(tracelog.LevelTrace, "/Users/bill/Temp/logs", 1)
+		    tracelog.Start(tracelog.LevelTrace)
 
 		    tracelog.Trace("main", "main", "Hello Trace")
 		    tracelog.Info("main", "main", "Hello Info")
@@ -58,6 +54,10 @@
 		TRACE: 2013/11/07 08:24:32 tracelog.go:149: main : Stop : Started
 		TRACE: 2013/11/07 08:24:32 tracelog.go:156: main : Stop : Completed
 */
+
+// Package tracelog implements a logging system to trace all aspect of your code. This is great for task oriented programs.
+// Based on the Go log standard library. It provides 4 destinations with logging levels plus you can attach a file for persistent
+// writes. A log clean process is provided to maintain disk space. There is also email support to send email alerts.
 package tracelog
 
 import (
@@ -79,10 +79,17 @@ import (
 const systemAlertSubject = "TraceLog Exception"
 
 const (
-	LEVEL_TRACE int32 = 1 // Log everything
-	LEVEL_INFO  int32 = 2 // Log Info, Warnings and Errors
-	LEVEL_WARN  int32 = 4 // Log Warning and Errors
-	LEVEL_ERROR int32 = 8 // Log just Errors
+	// LevelTrace logs everything
+	LevelTrace int32 = 1
+
+	// LevelInfo logs Info, Warnings and Errors
+	LevelInfo int32 = 2
+
+	// LevelWarn logs Warning and Errors
+	LevelWarn int32 = 4
+
+	// LevelError logs just Errors
+	LevelError int32 = 8
 )
 
 // emailConfiguration contains configuration information required by the ConfigureEmailAlerts function.
@@ -223,25 +230,25 @@ func turnOnLogging(logLevel int32, fileHandle io.Writer) {
 	warnHandle := ioutil.Discard
 	errorHandle := ioutil.Discard
 
-	if logLevel&LEVEL_TRACE != 0 {
+	if logLevel&LevelTrace != 0 {
 		traceHandle = os.Stdout
 		infoHandle = os.Stdout
 		warnHandle = os.Stdout
 		errorHandle = os.Stderr
 	}
 
-	if logLevel&LEVEL_INFO != 0 {
+	if logLevel&LevelInfo != 0 {
 		infoHandle = os.Stdout
 		warnHandle = os.Stdout
 		errorHandle = os.Stderr
 	}
 
-	if logLevel&LEVEL_WARN != 0 {
+	if logLevel&LevelWarn != 0 {
 		warnHandle = os.Stdout
 		errorHandle = os.Stderr
 	}
 
-	if logLevel&LEVEL_ERROR != 0 {
+	if logLevel&LevelError != 0 {
 		errorHandle = os.Stderr
 	}
 

@@ -1,6 +1,8 @@
 // Copyright 2013 Ardan Studios. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE handle.
+
+// Package tracelog : logcalls.go provides formatting functions.
 package tracelog
 
 import (
@@ -24,7 +26,7 @@ func Completed(title string, functionName string) {
 	logger.Trace.Output(2, fmt.Sprintf("%s : %s : Completed\n", title, functionName))
 }
 
-// COMPLETEDf uses the Serialize destination and writes a Completed tag to the log line
+// Completedf uses the Serialize destination and writes a Completed tag to the log line
 func Completedf(title string, functionName string, format string, a ...interface{}) {
 	logger.Trace.Output(2, fmt.Sprintf("%s : %s : Completed : %s\n", title, functionName, fmt.Sprintf(format, a...)))
 }
