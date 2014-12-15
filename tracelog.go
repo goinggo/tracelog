@@ -270,12 +270,10 @@ func turnOnLogging(logLevel int32, fileHandle io.Writer) {
 		}
 	}
 
-	logger = traceLog{
-		Trace:   log.New(traceHandle, "TRACE: ", log.Ldate|log.Ltime|log.Lshortfile),
-		Info:    log.New(infoHandle, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile),
-		Warning: log.New(warnHandle, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile),
-		Error:   log.New(errorHandle, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile),
-	}
+	logger.Trace = log.New(traceHandle, "TRACE: ", log.Ldate|log.Ltime|log.Lshortfile)
+	logger.Info = log.New(infoHandle, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	logger.Warning = log.New(warnHandle, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
+	logger.Error = log.New(errorHandle, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	atomic.StoreInt32(&logger.LogLevel, logLevel)
 }
