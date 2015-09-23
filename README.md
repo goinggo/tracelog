@@ -2,31 +2,37 @@
 
 Tracelog sits on top of [Go's log library](https://golang.org/pkg/log/). See the following example for an implementation (it's super easy to use)
 
-
 ### Example
 ```go
 package main
+
 import (
     "fmt"
-    "github.com/finapps/tracelog"
+
+    "github.com/goinggo/tracelog"
 )
+
 func main() {
     //tracelog.StartFile(tracelog.LevelTrace, "/Users/bill/Temp/logs", 1)
+    
     tracelog.Start(tracelog.LevelTrace)
     tracelog.Trace("main", "main", "Hello Trace")
     tracelog.Info("main", "main", "Hello Info")
     tracelog.Warning("main", "main", "Hello Warn")
     tracelog.Errorf(fmt.Errorf("Exception At..."), "main", "main", "Hello Error")
+    
     Example()
     tracelog.Stop()
 }
+
 func Example() {
     tracelog.Started("main", "Example")
-    err := foo()
-    if err != nil {
+    
+    if err := foo(); err != nil {
         tracelog.CompletedError(err, "main", "Example")
         return
     }
+    
     tracelog.Completed("main", "Example")
 }
 ```
