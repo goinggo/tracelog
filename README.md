@@ -8,7 +8,7 @@ package main
 
 import (
     "fmt"
-
+    "errors"
     "github.com/goinggo/tracelog"
 )
 
@@ -23,6 +23,10 @@ func main() {
     
     Example()
     tracelog.Stop()
+}
+
+func foo() error {
+        return errors.New("test")
 }
 
 func Example() {
